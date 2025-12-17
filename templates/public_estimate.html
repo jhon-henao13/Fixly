@@ -1,0 +1,11 @@
+<h1>Presupuesto</h1>
+<p>{{ estimate.description }}</p>
+<p>Total: ${{ estimate.total }}</p>
+
+{% if not estimate.approved %}
+<form method="post">
+  <button>Aprobar</button>
+</form>
+{% else %}
+<p>Aprobado ✅</p>
+{% endif %}

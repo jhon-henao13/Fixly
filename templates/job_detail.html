@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-bold">{{ job.item }}</h2>
+<p>{{ job.problem }}</p>
+
+<form method="post" action="/jobs/{{ job.id }}/status">
+  <select name="status" class="border p-2">
+    {% for s in ["RECEIVED","DIAGNOSED","IN_PROGRESS","DONE","DELIVERED"] %}
+      <option {% if job.status == s %}selected{% endif %}>{{ s }}</option>
+    {% endfor %}
+  </select>
+  <button class="ml-2 bg-blue-600 text-white px-2">Actualizar</button>
+</form>
+
+{% if estimate %}
+  <p>Total: ${{ estimate.total }}</p>
+  <a href="/e/{{ estimate.token }}" class="text-blue-600">Ver presupuesto</a>
+{% else %}
+  <a href="/jobs/{{ job.id }}/estimate" class="text-green-600">Crear presupuesto</a>
+{% endif %}
+{% endblock %}

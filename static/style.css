@@ -1,0 +1,246 @@
+body {
+  font-family: system-ui, sans-serif;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+button {
+  transition: background-color 0.2s;
+}
+
+.card {
+  background: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+
+
+.badge.RECEIVED { background: #e5e7eb; }
+.badge.DIAGNOSED { background: #fde68a; }
+.badge.IN_PROGRESS { background: #bfdbfe; }
+.badge.DONE { background: #bbf7d0; }
+.badge.DELIVERED { background: #ddd6fe; }
+
+
+
+
+/* Animaciones */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out;
+}
+
+/* Verde Fixly */
+:root {
+  --fixly-green: #16a34a;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+
+/* Glass cards */
+.glass {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Animaciones suaves */
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+.hover-float:hover {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Scroll smooth */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Inputs oscuros */
+input {
+  background: rgba(255,255,255,0.05);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+
+.text-sm a {
+  font-size: 18px;
+
+  font-weight: 700;
+}
+
+
+
+/* style.css */
+
+/* Animaciones Custom que Tailwind no trae por defecto */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-500 { animation-delay: 0.5s; }
+
+/* Estilización Global de Formularios para estilo "Dark Cyber" */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+textarea,
+select {
+  @apply w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-slate-500 transition-all duration-200;
+  outline: none;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  @apply border-emerald-500 ring-1 ring-emerald-500/50 bg-slate-900;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+}
+
+label {
+  @apply block text-sm font-medium text-slate-400 mb-1 ml-1;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #020617; 
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155; 
+}
+
+
+
+/* ============================= */
+/* Mockup Glow SaaS Effect */
+/* ============================= */
+
+.mockup-glow {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Halo principal */
+.mockup-glow::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  z-index: -2;
+
+  background:
+    radial-gradient(
+      50% 50% at 50% 50%,
+      rgba(16, 185, 129, 0.35),
+      rgba(34, 211, 238, 0.25),
+      transparent 70%
+    );
+
+  filter: blur(80px);
+  opacity: 0.9;
+  transform: translateZ(0);
+}
+
+/* Aura secundaria suave */
+.mockup-glow::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  z-index: -1;
+
+  background:
+    linear-gradient(
+      120deg,
+      rgba(16, 185, 129, 0.15),
+      rgba(34, 211, 238, 0.15),
+      rgba(168, 85, 247, 0.15)
+    );
+
+  filter: blur(60px);
+  opacity: 0.6;
+}
+
+/* Responsive tuning */
+@media (max-width: 768px) {
+  .mockup-glow::before {
+    filter: blur(60px);
+    inset: -10%;
+  }
+
+  .mockup-glow::after {
+    filter: blur(40px);
+  }
+}
+
+
+@media (hover: hover) {
+  .mockup-glow:hover img {
+    transform: perspective(1000px) rotateX(1deg) rotateY(-1deg) scale(1.015);
+  }
+}

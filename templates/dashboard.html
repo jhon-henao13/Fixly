@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="flex flex-col md:flex-row justify-between items-end mb-8 animate-fade-in-up">
+  <div>
+    <h1 class="text-3xl font-heading font-bold text-white">Panel de Control</h1>
+    <p class="text-slate-400 mt-1">Bienvenido de nuevo, <span class="text-emerald-400">{{ current_user.name if current_user.name else 'Taller' }}</span></p>
+  </div>
+  
+  <a href="/jobs/new" class="mt-4 md:mt-0 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+    <span class="text-xl">+</span> Nuevo Trabajo
+  </a>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-sm">
+        <div class="text-slate-400 text-xs uppercase tracking-wider">Pendientes</div>
+        <div class="text-2xl font-bold text-white">12</div>
+    </div>
+    <div class="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-sm">
+        <div class="text-slate-400 text-xs uppercase tracking-wider">En Progreso</div>
+        <div class="text-2xl font-bold text-cyan-400">5</div>
+    </div>
+    </div>
+
+<div class="grid gap-4 animate-fade-in-up delay-100">
+{% if jobs|length == 0 %}
+  <div class="text-center py-20 bg-white/5 rounded-2xl border border-dashed border-white/10">
+      <p class="text-slate-500">No hay trabajos activos. ¡Crea el primero!</p>
+  </div>
+{% else %}
+  
+  {% for job in jobs %}
+  <a href="/jobs/{{ job.id }}" class="group block p-5 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-emerald-500/50 hover:bg-white/[0.02] transition-all duration-300 relative overflow-hidden">
+    
+    <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition"></div>
+
+    <div class="flex justify-between items-start">
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                <h3 class="text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">{{ job.item }}</h3>
+                <span class="text-xs px-2 py-0.5 rounded border border-white/10 bg-white/5 text-slate-400 font-mono">#{{ job.id }}</span>
+            </div>
+            <p class="text-slate-400 text-sm">{{ job.client_name }}</p>
+        </div>
+
+        <div>
+            {% if job.status == 'RECEIVED' %}
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-600">Recibido</span>
+            {% elif job.status == 'IN_PROGRESS' %}
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse">En Taller</span>
+            {% elif job.status == 'DONE' %}
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Listo</span>
+            {% else %}
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-white/5 text-white">{{ job.status }}</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="mt-4 flex items-center gap-4 text-xs text-slate-500">
+        <div class="flex items-center gap-1">
+            <span>📅 Ingreso: Hoy</span> </div>
+    </div>
+  </a>
+  {% endfor %}
+
+{% endif %}
+</div>
+{% endblock %}

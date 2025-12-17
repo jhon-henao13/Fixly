@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="post" class="max-w-sm mx-auto mt-20 space-y-4 bg-white p-6 rounded shadow">
+  <h2 class="text-xl font-bold text-center">Iniciar sesión</h2>
+
+  <input name="email" placeholder="Email" class="w-full p-2 border rounded">
+  <input name="password" type="password" placeholder="Password" class="w-full p-2 border rounded">
+
+  <button class="w-full bg-blue-600 text-white p-2 rounded">
+    Entrar
+  </button>
+</form>
+{% endblock %}
