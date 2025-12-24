@@ -1,24 +1,91 @@
 {% extends "base.html" %}
-
 {% block content %}
-<form method="post"
-      class="max-w-md mx-auto mt-16 bg-white p-8 rounded-xl shadow animate-slide-up">
 
-  <h2 class="text-2xl font-bold text-center text-green-600 mb-6">
-    Crear cuenta de taller
-  </h2>
+<section class="min-h-[75vh] flex items-center justify-center px-4">
+  <div class="relative w-full max-w-xl">
 
-  <input name="workshop_name" placeholder="Nombre del taller" required>
-  <input name="email" type="email" placeholder="Email" required>
-  <input name="password" type="password" placeholder="Contraseña" required>
+    <!-- Glow -->
+    <div class="absolute inset-0 rounded-3xl bg-gradient-to-r
+                from-emerald-500/25 via-cyan-500/25 to-purple-500/25
+                blur-xl opacity-70"></div>
 
-  <button class="w-full bg-green-600 text-white p-3 rounded mt-4 hover:bg-green-700 transition">
-    Crear cuenta
-  </button>
+    <!-- Card -->
+    <div class="relative glass rounded-3xl p-8 sm:p-10
+                border border-white/10
+                animate-fade-in-up">
 
-  <p class="text-sm text-center mt-4 text-gray-500">
-    ¿Ya tienes cuenta?
-    <a href="/login" class="text-green-600 hover:underline">Ingresar</a>
-  </p>
-</form>
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-2xl sm:text-3xl font-heading font-extrabold text-white">
+          Crea tu taller en Fixly
+        </h1>
+        <p class="mt-2 text-slate-400 text-sm sm:text-base">
+          Gratis · Sin tarjeta · En menos de 1 minuto
+        </p>
+      </div>
+
+      <!-- Form -->
+      <form method="post" class="space-y-6">
+
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <label>Nombre del taller</label>
+          <input class="rounded-lg p-2 text-slate-100 bg-slate-900 border border-white/10"
+            type="text"
+            name="workshop_name"
+            placeholder="Taller Mecánico San José"
+            required
+          >
+        </div>
+
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <label>Email</label>
+          <input class="rounded-lg p-2 text-slate-100 bg-slate-900 border border-white/10"
+            type="email"
+            name="email"
+            placeholder="contacto@tutaller.com"
+            required
+          >
+        </div>
+
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <label>Contraseña</label>
+          <input class="rounded-lg p-2 text-slate-100 bg-slate-900 border border-white/10"
+            type="password"
+            name="password"
+            placeholder="Mínimo 8 caracteres"
+            required
+          >
+        </div>
+
+        <button
+          type="submit"
+          class="group relative w-full py-3.5 rounded-xl
+                 font-bold text-lg
+                 bg-gradient-to-r from-emerald-400 to-cyan-400
+                 text-slate-900
+                 hover:scale-[1.02]
+                 hover:shadow-[0_0_30px_rgba(34,211,238,0.45)]
+                 transition-all duration-300 overflow-hidden">
+
+          <span class="relative z-10">Crear mi taller ahora</span>
+
+          <span class="absolute inset-0 bg-white/30
+                       translate-x-[-120%] group-hover:translate-x-[120%]
+                       transition-transform duration-700 skew-x-12"></span>
+        </button>
+
+      </form>
+
+      <!-- Footer -->
+      <p class="mt-8 text-center text-sm text-slate-500">
+        ¿Ya tienes cuenta?
+        <a href="/login" class="text-emerald-400 font-semibold hover:underline">
+          Iniciar sesión
+        </a>
+      </p>
+
+    </div>
+  </div>
+</section>
+
 {% endblock %}

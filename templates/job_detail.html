@@ -1,21 +1,43 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 class="text-xl font-bold">{{ job.item }}</h2>
-<p>{{ job.problem }}</p>
+<h1 class="text-2xl font-bold text-white">{{ job.item }}</h1>
+<p class="text-slate-400 mt-1">
+  {{ job.client.name }} · {{ job.client.phone }}
+</p>
 
-<form method="post" action="/jobs/{{ job.id }}/status">
-  <select name="status" class="border p-2">
-    {% for s in ["RECEIVED","DIAGNOSED","IN_PROGRESS","DONE","DELIVERED"] %}
-      <option {% if job.status == s %}selected{% endif %}>{{ s }}</option>
+<div class="mt-6 glass p-6 rounded-2xl">
+  <h3 class="font-bold text-white mb-2">Problema</h3>
+  <p class="text-slate-300">{{ job.problem }}</p>
+</div>
+
+<form method="post" action="/jobs/{{ job.id }}/status" class="mt-6 flex gap-3">
+  <select name="status" class="glass px-4 py-2 rounded-xl">
+    {% for s in ["RECEIVED","IN_PROGRESS","DONE","DELIVERED"] %}
+      <option value="{{ s }}" {% if job.status == s %}selected{% endif %}>
+        {{ s }}
+      </option>
     {% endfor %}
   </select>
-  <button class="ml-2 bg-blue-600 text-white px-2">Actualizar</button>
+
+  <button class="bg-emerald-500 px-4 rounded-xl font-bold">
+    Actualizar estado
+  </button>
 </form>
 
+<div class="mt-8">
 {% if estimate %}
-  <p>Total: ${{ estimate.total }}</p>
-  <a href="/e/{{ estimate.token }}" class="text-blue-600">Ver presupuesto</a>
+  <p class="text-xl text-white font-bold">
+    Total: ${{ estimate.total }}
+  </p>
+  <a href="/e/{{ estimate.token }}" class="text-cyan-400 underline">
+    Ver presupuesto público
+  </a>
 {% else %}
-  <a href="/jobs/{{ job.id }}/estimate" class="text-green-600">Crear presupuesto</a>
+  <a href="/jobs/{{ job.id }}/estimate"
+     class="inline-block mt-4 px-4 py-2 bg-cyan-500 rounded-xl font-bold">
+    Crear presupuesto
+  </a>
 {% endif %}
+</div>
+
 {% endblock %}

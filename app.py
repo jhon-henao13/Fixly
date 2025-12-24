@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 import smtplib
 from email.message import EmailMessage
 
-
 load_dotenv()
 
 app = Flask(__name__)
@@ -17,14 +16,12 @@ app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-
 db = SQLAlchemy(app)
 
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 # ================= MODELS =================
-
 class Workshop(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
@@ -36,15 +33,24 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(255))
 
+class Client(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    workshop_id = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(50))
+    email = db.Column(db.String(120))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    workshop_id = db.Column(db.Integer)
-    client_name = db.Column(db.String(120))
-    client_phone = db.Column(db.String(50))
-    item = db.Column(db.String(120))
+    workshop_id = db.Column(db.Integer, nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey("client.id"), nullable=False)
+    item = db.Column(db.String(120), nullable=False)
     problem = db.Column(db.Text)
     status = db.Column(db.String(50), default="RECEIVED")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    client = db.relationship("Client")
 
 class Estimate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,7 +62,6 @@ class Estimate(db.Model):
     approved = db.Column(db.Boolean, default=False)
     token = db.Column(db.String(64), unique=True)
 
-
 class ContactLead(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
@@ -65,10 +70,7 @@ class ContactLead(db.Model):
     message = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-
-
 # ================= AUTH =================
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -79,8 +81,6 @@ def index():
     if current_user.is_authenticated:
         return redirect("/dashboard")
     return render_template("landing.html")
-
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -106,11 +106,6 @@ def register():
     return render_template("register.html")
 
 
-
-
-
-
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -127,30 +122,57 @@ def logout():
     return redirect("/login")
 
 # ================= DASHBOARD =================
-
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    jobs = Job.query.filter_by(workshop_id=current_user.workshop_id).all()
-    return render_template("dashboard.html", jobs=jobs)
+    wid = current_user.workshop_id
+
+    jobs = Job.query.filter_by(
+        workshop_id=wid
+    ).order_by(Job.created_at.desc()).limit(5).all()
+
+
+    stats = {
+        "pending": Job.query.filter_by(workshop_id=wid, status="RECEIVED").count(),
+        "in_progress": Job.query.filter_by(workshop_id=wid, status="IN_PROGRESS").count(),
+        "done": Job.query.filter_by(workshop_id=wid, status="DONE").count(),
+        "total": Job.query.filter_by(workshop_id=wid).count()
+    }
+
+    return render_template("dashboard.html", jobs=jobs, stats=stats)
 
 # ================= JOBS =================
-
 @app.route("/jobs/new", methods=["GET", "POST"])
 @login_required
 def job_new():
     if request.method == "POST":
+        client = Client.query.filter_by(
+            workshop_id=current_user.workshop_id,
+            phone=request.form["client_phone"]
+        ).first()
+
+        if not client:
+            client = Client(
+                workshop_id=current_user.workshop_id,
+                name=request.form["client_name"],
+                phone=request.form["client_phone"]
+            )
+            db.session.add(client)
+            db.session.flush()  # obtiene ID sin commit
+
         job = Job(
             workshop_id=current_user.workshop_id,
-            client_name=request.form["client_name"],
-            client_phone=request.form["client_phone"],
+            client_id=client.id,
             item=request.form["item"],
             problem=request.form["problem"]
         )
+
         db.session.add(job)
         db.session.commit()
         return redirect("/dashboard")
+
     return render_template("job_new.html")
+
 
 @app.route("/jobs/<int:job_id>")
 @login_required
@@ -251,7 +273,6 @@ Mensaje:
         print("Error enviando email:", e)
 
     return redirect(url_for("index") + "#contacto")
-
 
 # ================= RUN =================
 
