@@ -87,8 +87,8 @@
       <p class="text-slate-400">Plan actual: <strong class="text-white">{{ current_user.workshop.subscription.plan if current_user.workshop.subscription else 'Free' }}</strong></p>
       {% if not current_user.workshop.subscription or current_user.workshop.subscription.plan == 'free' %}
         <div class="mt-4 space-x-2">
-          <a href="/subscribe/basic" class="px-4 py-2 bg-blue-600 text-white rounded">Suscribir Basic ($9/mes)</a>
-          <a href="/subscribe/premium" class="px-4 py-2 bg-purple-600 text-white rounded">Suscribir Premium ($19/mes)</a>
+          <a href="/subscribe/basic" class="px-4 py-2 bg-blue-800 text-white rounded-lg font-bold">Suscribir Basic ($9/mes)</a>
+          <a href="/subscribe/premium" class="px-4 py-2 bg-green-700 text-white rounded-lg font-bold">Suscribir Premium ($19/mes)</a>
         </div>
       {% endif %}
     </section>
@@ -121,6 +121,15 @@
         </p>
       </div>
 
+    </section>
+
+    <!-- ================= ANALYTICS ================= -->
+    <section class="glass rounded-2xl p-5 border border-white/10">
+      <h2 class="text-xl font-heading font-bold text-white mb-4">Analytics</h2>
+      <canvas id="jobsChart" width="400" height="200"></canvas>
+      {% if current_user.workshop.subscription and current_user.workshop.subscription.plan == 'premium' %}
+        <p class="text-emerald-400 mt-4">💡 IA Recomendación: Prioriza trabajos con prioridad alta para aumentar eficiencia en un 20%.</p>
+      {% endif %}
     </section>
 
     <!-- ================= JOBS ================= -->
@@ -179,5 +188,29 @@
 
   </main>
 </div>
+
+<script>
+  const ctx = document.getElementById('jobsChart').getContext('2d');
+  const jobsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Pendientes', 'En Progreso', 'Completados'],
+      datasets: [{
+        label: 'Trabajos',
+        data: [{{ stats.pending }}, {{ stats.in_progress }}, {{ stats.done }}],
+        backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+        borderColor: ['#dc2626', '#d97706', '#059669'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script>
 
 {% endblock %}

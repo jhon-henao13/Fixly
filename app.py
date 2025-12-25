@@ -16,6 +16,8 @@ from flask_migrate import Migrate
 
 import requests
 
+from twilio.rest import Client as TwilioClient
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -34,6 +36,9 @@ app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")  # Tu contraseña
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USER")  # Tu correo como remitente
 
 mail = Mail(app)
+
+# Configuración de Twilio para SMS (Premium)
+twilio_client = TwilioClient(os.getenv("TWILIO_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
     
 db = SQLAlchemy(app)
 
@@ -57,6 +62,7 @@ class User(UserMixin, db.Model):
     workshop_id = db.Column(db.Integer, db.ForeignKey('workshop.id'))
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(255))
+    role = db.Column(db.String(20), default="user")  # admin, user
 
     workshop = db.relationship("Workshop", backref="users")
 
@@ -144,7 +150,8 @@ def register():
             user = User(
                 workshop_id=existing_workshop.id,
                 email=request.form["email"],
-                password=generate_password_hash(request.form["password"])
+                password=generate_password_hash(request.form["password"]),
+                role="user"
             )
             db.session.add(user)
             db.session.commit()
@@ -161,7 +168,8 @@ def register():
         user = User(
             workshop_id=workshop.id,
             email=request.form["email"],
-            password=generate_password_hash(request.form["password"])
+            password=generate_password_hash(request.form["password"]),
+            role="admin"  # Primer usuario es admin
         )
         db.session.add(user)
         db.session.commit()
@@ -293,8 +301,10 @@ def update_status(job_id):
 def send_status_update_email(job):
     client = job.client
     workshop = Workshop.query.get(job.workshop_id)
+    sub = workshop.subscription
+    plan = sub.plan if sub else "free"
 
-    # Correo para el taller
+    # Correo para el taller (todos los planes)
     msg_workshop = Message(
         f"Estado de trabajo {job.item}",
         sender=os.getenv("MAIL_USER"),
@@ -302,12 +312,12 @@ def send_status_update_email(job):
     )
     msg_workshop.body = f"El trabajo con ID {job.id} ha cambiado de estado a: {job.status}."
     try:
-        mail.send(msg_workshop)  # Enviar correo al taller
+        mail.send(msg_workshop)
     except Exception as e:
         print(f"Error al enviar el correo al taller: {e}")
 
-    # Correo para el cliente
-    if client.email:
+    # Correo para el cliente (Basic y Premium)
+    if client.email and plan in ["basic", "premium"]:
         msg_client = Message(
             f"Actualización de tu trabajo {job.item}",
             sender=os.getenv("MAIL_USER"),
@@ -315,9 +325,20 @@ def send_status_update_email(job):
         )
         msg_client.body = f"Hola {client.name},\n\nEl estado de tu trabajo ha cambiado a: {job.status}.\n\nGracias por elegirnos."
         try:
-            mail.send(msg_client)  # Enviar correo al cliente
+            mail.send(msg_client)
         except Exception as e:
             print(f"Error al enviar el correo al cliente: {e}")
+
+    # SMS para el cliente (Premium)
+    if client.phone and plan == "premium":
+        try:
+            twilio_client.messages.create(
+                body=f"Hola {client.name}, tu trabajo '{job.item}' ha cambiado a: {job.status}.",
+                from_=os.getenv("TWILIO_PHONE"),
+                to=client.phone
+            )
+        except Exception as e:
+            print(f"Error al enviar SMS: {e}")
 
 
 
@@ -510,8 +531,6 @@ Mensaje:
     return redirect(url_for("index") + "#contacto")
 
 
-
-
 @app.route("/forgot_password", methods=["GET", "POST"])
 def forgot_password():
     if request.method == "POST":
@@ -592,36 +611,17 @@ def subscribe(plan):
     return "Error creando checkout", 500
 
 
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    # Verificar firma (opcional pero recomendado)
-    # Aquí simplificado; en producción, verifica el header X-Signature
+@app.route("/api/jobs", methods=["GET"])
+@login_required
+def api_jobs():
+    sub = current_user.workshop.subscription
+    plan = sub.plan if sub else "free"
+    if plan != "premium":
+        return jsonify({"error": "API access requires Premium plan"}), 403
 
-    data = request.get_json()
-    event = data.get("meta", {}).get("event_name")
-    if event == "order_created":
-        # Pago exitoso
-        customer_email = data["data"]["attributes"]["user_email"]
-        variant_id = data["data"]["attributes"]["first_order_item"]["variant_id"]
-        
-        # Mapear variant_id a plan
-        plan_map = {
-            "tu_variant_id_basic": "basic",
-            "tu_variant_id_premium": "premium"
-        }
-        plan = plan_map.get(variant_id)
-        if plan:
-            user = User.query.filter_by(email=customer_email).first()
-            if user:
-                sub = Subscription.query.filter_by(workshop_id=user.workshop_id).first()
-                if not sub:
-                    sub = Subscription(workshop_id=user.workshop_id, plan=plan, lemon_customer_id=data["data"]["attributes"]["customer_id"])
-                    db.session.add(sub)
-                else:
-                    sub.plan = plan
-                    sub.active = True
-                db.session.commit()
-    return "OK", 200
+    jobs = Job.query.filter_by(workshop_id=current_user.workshop_id).all()
+    jobs_data = [{"id": j.id, "item": j.item, "status": j.status, "client": j.client.name} for j in jobs]
+    return jsonify(jobs_data)
 
 
 # ================= RUN =================
