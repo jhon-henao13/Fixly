@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Informe de Trabajo</h1>
+<h2>{{ job.item }}</h2>
+<p><strong>Cliente:</strong> {{ job.client.name }}</p>
+<p><strong>Problema:</strong> {{ job.problem }}</p>
+<p><strong>Estado:</strong> {{ job.status }}</p>
+{% if estimate %}
+<h3>Estimación</h3>
+<p>Mano de obra: ${{ estimate.labor }}</p>
+<p>Partes: ${{ estimate.parts }}</p>
+<p>Total: ${{ estimate.total }}</p>
+{% endif %}
+<h3>Historial</h3>
+<ul>
+  {% for log in logs %}
+    <li>{{ log.timestamp }}: {{ log.change }}</li>
+  {% endfor %}
+</ul>
+<a href="/jobs/{{ job.id }}" class="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded">Volver</a>
+{% endblock %}

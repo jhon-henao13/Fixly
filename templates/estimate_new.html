@@ -1,6 +1,60 @@
-<form method="post" class="space-y-4">
-  <textarea name="description" placeholder="Descripción"></textarea>
-  <input name="labor" placeholder="Mano de obra">
-  <input name="parts" placeholder="Repuestos">
-  <button>Crear presupuesto</button>
-</form>
+{% extends "base.html" %}
+{% block content %}
+<section class="min-h-[80vh] flex items-center justify-center px-4">
+  <div class="relative w-full max-w-lg">
+    <!-- Glow background -->
+    <div class="absolute inset-0 rounded-3xl bg-gradient-to-r
+                from-emerald-500/20 via-cyan-500/20 to-purple-500/20
+                blur-xl opacity-60"></div>
+
+    <!-- Form Card -->
+    <div class="relative glass rounded-3xl p-8 sm:p-10 border border-white/10 animate-fade-in-up">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-2xl sm:text-3xl font-heading font-extrabold text-white">
+          Crear presupuesto
+        </h1>
+        <p class="mt-2 text-slate-400 text-sm sm:text-base">
+          Ingresa los detalles a continuación para generar un presupuesto.
+        </p>
+      </div>
+
+      <!-- Form -->
+      <form method="post" class="space-y-6">
+        <!-- Descripción -->
+        <div>
+          <label class="block text-white">Descripción</label>
+          <textarea name="description" placeholder="Descripción del trabajo" class="w-full p-3 rounded-lg bg-slate-900 text-slate-100 border border-white/10 focus:ring-2 focus:ring-emerald-500 transition-all" required></textarea>
+        </div>
+
+        <!-- Mano de obra -->
+        <div>
+          <label class="block text-white">Mano de obra</label>
+          <input name="labor" placeholder="Ej: 48 USD o 150000 COP" class="w-full p-3 rounded-lg bg-slate-900 text-slate-100 border border-white/10 focus:ring-2 focus:ring-emerald-500 transition-all" required>
+        </div>
+
+        <!-- Repuestos -->
+        <div>
+          <label class="block text-white">Repuestos</label>
+          <input name="parts" placeholder="Ej: 100 USD o 300000 COP" class="w-full p-3 rounded-lg bg-slate-900 text-slate-100 border border-white/10 focus:ring-2 focus:ring-emerald-500 transition-all" required>
+        </div>
+
+        <!-- Moneda -->
+        <div>
+          <label class="block text-white">Moneda</label>
+          <select name="currency" class="w-full p-3 rounded-lg bg-slate-900 text-slate-100 border border-white/10 focus:ring-2 focus:ring-emerald-500 transition-all" required>
+            <option value="USD">USD</option>
+            <option value="COP">COP</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+
+        <!-- Botón Crear presupuesto -->
+        <button class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 font-bold text-lg hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,211,238,0.45)] transition-all duration-300 overflow-hidden">
+          <span class="relative z-10">Crear presupuesto</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

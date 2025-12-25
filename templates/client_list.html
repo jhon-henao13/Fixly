@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Clientes</h1>
+<ul class="space-y-2">
+  {% for client in clients %}
+    <li class="border p-4 rounded">
+      <strong>{{ client.name }}</strong> - {{ client.phone }} - {{ client.email or 'Sin email' }}
+    </li>
+  {% endfor %}
+</ul>
+<a href="/dashboard" class="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded">Volver al Dashboard</a>
+{% endblock %}

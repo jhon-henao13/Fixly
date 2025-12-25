@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Editar Trabajo</h1>
+<form method="post" class="space-y-4 max-w-md">
+  <label>Estado:</label>
+  <select name="status" class="w-full p-2 border">
+    <option value="RECEIVED" {% if job.status == 'RECEIVED' %}selected{% endif %}>Recibido</option>
+    <option value="IN_PROGRESS" {% if job.status == 'IN_PROGRESS' %}selected{% endif %}>En Progreso</option>
+    <option value="DONE" {% if job.status == 'DONE' %}selected{% endif %}>Completado</option>
+  </select>
+  <label>Entrega Estimada:</label>
+  <input type="date" name="estimated_delivery" class="w-full p-2 border">
+  <label>Prioridad:</label>
+  <select name="priority" class="w-full p-2 border">
+    <option value="low">Baja</option>
+    <option value="medium">Media</option>
+    <option value="high">Alta</option>
+  </select>
+  <button class="bg-green-600 text-white px-4 py-2">Guardar</button>
+</form>
+<a href="/jobs/{{ job.id }}" class="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded">Volver</a>
+{% endblock %}

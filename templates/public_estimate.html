@@ -1,11 +1,48 @@
-<h1>Presupuesto</h1>
-<p>{{ estimate.description }}</p>
-<p>Total: ${{ estimate.total }}</p>
+{% extends "base.html" %}
+{% block content %}
+<section class="min-h-[80vh] flex items-center justify-center px-4">
+  <div class="relative w-full max-w-lg">
+    <!-- Glow background -->
+    <div class="absolute inset-0 rounded-3xl bg-gradient-to-r
+                from-emerald-500/20 via-cyan-500/20 to-purple-500/20
+                blur-xl opacity-60"></div>
 
-{% if not estimate.approved %}
-<form method="post">
-  <button>Aprobar</button>
-</form>
-{% else %}
-<p>Aprobado ✅</p>
-{% endif %}
+    <!-- Estimate Card -->
+    <div class="relative glass rounded-3xl p-8 sm:p-10 border border-white/10 animate-fade-in-up">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-2xl sm:text-3xl font-heading font-extrabold text-white">
+          Presupuesto
+        </h1>
+        <p class="mt-2 text-slate-400 text-sm sm:text-base">
+          Detalles del presupuesto para el trabajo solicitado.
+        </p>
+      </div>
+
+      <!-- Estimate Details -->
+      <div class="text-center">
+        <p class="text-xl text-white font-semibold mb-4">{{ estimate.description }}</p>
+        <p class="text-lg text-white font-bold">Total: {{ estimate.total }} {{ estimate.currency }}</p>
+
+        {% if not estimate.approved %}
+        <!-- Approve/Reject Form -->
+        <form method="post" class="mt-8 space-y-4">
+          <button type="submit" name="action" value="approve" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 font-bold text-lg hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,211,238,0.45)] transition-all duration-300 overflow-hidden">
+            Aprobar presupuesto
+          </button>
+          <button type="submit" name="action" value="reject" class="w-full py-3 rounded-xl bg-red-500 text-white font-bold text-lg hover:scale-[1.02] transition-all duration-300">
+            Rechazar presupuesto
+          </button>
+        </form>
+        {% elif estimate.approved %}
+        <!-- Approved -->
+        <p class="mt-8 text-green-500 text-xl font-semibold">Aprobado ✅</p>
+        {% elif estimate.rejected %}
+        <!-- Rejected -->
+        <p class="mt-8 text-red-500 text-xl font-semibold">Rechazado ❌</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

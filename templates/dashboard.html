@@ -35,11 +35,11 @@
                   text-slate-400 hover:bg-white/5 hover:text-white transition">
           👥 Clientes
         </a>
-        <!-- <a href="#"
+        <a href="/reports"
            class="flex items-center gap-3 px-4 py-2 rounded-xl
                   text-slate-400 hover:bg-white/5 hover:text-white transition">
           📈 Reportes
-        </a> -->
+        </a>
         <a href="#"
            class="flex items-center gap-3 px-4 py-2 rounded-xl
                   text-slate-400 hover:bg-white/5 hover:text-white transition">
@@ -81,8 +81,17 @@
       </a>
     </div>
 
-    <!-- ================= KPIs ================= -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <!-- ================= PLAN ================= -->
+    <section class="glass rounded-2xl p-5 border border-white/10">
+      <h2 class="text-xl font-heading font-bold text-white mb-4">Tu Plan</h2>
+      <p class="text-slate-400">Plan actual: <strong class="text-white">{{ current_user.workshop.subscription.plan if current_user.workshop.subscription else 'Free' }}</strong></p>
+      {% if not current_user.workshop.subscription or current_user.workshop.subscription.plan == 'free' %}
+        <div class="mt-4 space-x-2">
+          <a href="/subscribe/basic" class="px-4 py-2 bg-blue-600 text-white rounded">Suscribir Basic ($9/mes)</a>
+          <a href="/subscribe/premium" class="px-4 py-2 bg-purple-600 text-white rounded">Suscribir Premium ($19/mes)</a>
+        </div>
+      {% endif %}
+    </section>
 
       <div class="glass rounded-2xl p-5 border border-white/10">
         <p class="text-slate-400 text-xs uppercase">Pendientes</p>
