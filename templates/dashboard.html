@@ -30,16 +30,16 @@
                   text-slate-400 hover:bg-white/5 hover:text-white transition">
           🛠️ Trabajos
         </a>
-        <a href="#"
+        <a href="/clients"
            class="flex items-center gap-3 px-4 py-2 rounded-xl
                   text-slate-400 hover:bg-white/5 hover:text-white transition">
           👥 Clientes
         </a>
-        <a href="#"
+        <!-- <a href="#"
            class="flex items-center gap-3 px-4 py-2 rounded-xl
                   text-slate-400 hover:bg-white/5 hover:text-white transition">
           📈 Reportes
-        </a>
+        </a> -->
         <a href="#"
            class="flex items-center gap-3 px-4 py-2 rounded-xl
                   text-slate-400 hover:bg-white/5 hover:text-white transition">
@@ -51,6 +51,8 @@
     <!-- User -->
     <div class="pt-6 border-t border-white/10 text-sm text-slate-400">
       {{ current_user.email }}
+      <br>
+      <a href="/forgot_password" class="text-sm text-emerald-400 hover:text-emerald-600">Actualizar contraseña</a>
     </div>
   </aside>
 
