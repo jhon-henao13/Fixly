@@ -230,6 +230,7 @@ CREATE TABLE `user` (
   `workshop_id` int DEFAULT NULL,
   `email` varchar(120) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
+  `role` varchar(20) DEFAULT 'user',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   KEY `workshop_id` (`workshop_id`),
@@ -243,7 +244,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (4,3,'jhonestiwarhenao@gmail.com','scrypt:32768:8:1$oWIPMvcrPxADhuHm$0049c28e4f5dbe336cfe83a294df420d8d56aa0eb186885c4123a06f5b51e53b2a1cc92f293c8b6d78738c05405a4d8fd18ea4a310ad5894a11a366d0a01a4e7');
+INSERT INTO `user` VALUES (4,3,'jhonestiwarhenao@gmail.com','scrypt:32768:8:1$oWIPMvcrPxADhuHm$0049c28e4f5dbe336cfe83a294df420d8d56aa0eb186885c4123a06f5b51e53b2a1cc92f293c8b6d78738c05405a4d8fd18ea4a310ad5894a11a366d0a01a4e7','user');
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -282,4 +283,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-25 13:24:43
+-- Dump completed on 2025-12-26 14:04:51

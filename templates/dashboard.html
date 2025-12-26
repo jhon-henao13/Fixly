@@ -1,18 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="flex gap-6">
+<div class="flex gap-6 flex-col md:flex-row">
 
   <!-- ================= SIDEBAR ================= -->
-  <aside class="hidden md:flex w-64 flex-col justify-between
-                glass border border-white/10 rounded-3xl p-6">
+  <aside class="hidden md:flex w-64 flex-col justify-between glass border border-white/10 rounded-3xl p-6 transition-all duration-300 ease-in-out">
 
     <!-- Logo -->
     <div>
       <div class="flex items-center gap-3 mb-10">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br
-                    from-emerald-400 to-cyan-400
-                    flex items-center justify-center text-slate-900 font-bold">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-slate-900 font-bold">
           F
         </div>
         <span class="text-xl font-heading font-bold text-white">Fixly</span>
@@ -21,28 +18,23 @@
       <!-- Nav -->
       <nav class="space-y-2 text-sm">
         <a href="/dashboard"
-           class="flex items-center gap-3 px-4 py-2 rounded-xl
-                  bg-emerald-500/10 text-emerald-400 font-semibold">
+           class="flex items-center gap-3 px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 font-semibold transition-all duration-200 ease-in-out hover:text-white">
           📊 Dashboard
         </a>
         <a href="/jobs"
-           class="flex items-center gap-3 px-4 py-2 rounded-xl
-                  text-slate-400 hover:bg-white/5 hover:text-white transition">
+           class="flex items-center gap-3 px-4 py-2 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition">
           🛠️ Trabajos
         </a>
         <a href="/clients"
-           class="flex items-center gap-3 px-4 py-2 rounded-xl
-                  text-slate-400 hover:bg-white/5 hover:text-white transition">
+           class="flex items-center gap-3 px-4 py-2 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition">
           👥 Clientes
         </a>
         <a href="/reports"
-           class="flex items-center gap-3 px-4 py-2 rounded-xl
-                  text-slate-400 hover:bg-white/5 hover:text-white transition">
+           class="flex items-center gap-3 px-4 py-2 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition">
           📈 Reportes
         </a>
         <a href="#"
-           class="flex items-center gap-3 px-4 py-2 rounded-xl
-                  text-slate-400 hover:bg-white/5 hover:text-white transition">
+           class="flex items-center gap-3 px-4 py-2 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition">
           ⚙️ Configuración
         </a>
       </nav>
@@ -57,7 +49,7 @@
   </aside>
 
   <!-- ================= MAIN ================= -->
-  <main class="flex-1 space-y-8">
+  <main class="flex-1 space-y-8 px-4 md:px-6">
 
     <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -71,60 +63,56 @@
       </div>
 
       <a href="/jobs/new"
-         class="px-6 py-3 rounded-xl
-                bg-gradient-to-r from-emerald-500 to-cyan-500
-                text-slate-900 font-bold
-                hover:scale-[1.03]
-                hover:shadow-[0_0_30px_rgba(16,185,129,0.45)]
-                transition">
+         class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-900 font-bold hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(16,185,129,0.45)] transition-all duration-300 ease-in-out">
         + Nuevo trabajo
       </a>
     </div>
 
     <!-- ================= PLAN ================= -->
-    <section class="glass rounded-2xl p-5 border border-white/10">
+    <section class="glass rounded-2xl p-5 border border-white/10 mb-8 transition-all duration-300 ease-in-out">
       <h2 class="text-xl font-heading font-bold text-white mb-4">Tu Plan</h2>
       <p class="text-slate-400">Plan actual: <strong class="text-white">{{ current_user.workshop.subscription.plan if current_user.workshop.subscription else 'Free' }}</strong></p>
       {% if not current_user.workshop.subscription or current_user.workshop.subscription.plan == 'free' %}
         <div class="mt-4 space-x-2">
-          <a href="/subscribe/basic" class="px-4 py-2 bg-blue-800 text-white rounded-lg font-bold">Suscribir Basic ($9/mes)</a>
-          <a href="/subscribe/premium" class="px-4 py-2 bg-green-700 text-white rounded-lg font-bold">Suscribir Premium ($19/mes)</a>
+          <a href="/subscribe/basic" class="px-4 py-2 bg-blue-800 text-white rounded-lg font-bold transition-all duration-200 ease-in-out hover:bg-blue-700">Suscribir Basic ($9/mes)</a>
+          <a href="/subscribe/premium" class="px-4 py-2 bg-green-700 text-white rounded-lg font-bold transition-all duration-200 ease-in-out hover:bg-green-600">Suscribir Premium ($19/mes)</a>
         </div>
       {% endif %}
     </section>
 
-      <div class="glass rounded-2xl p-5 border border-white/10">
+    <!-- Estadísticas -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="glass rounded-2xl p-5 border border-white/10 transition-all duration-300 ease-in-out">
         <p class="text-slate-400 text-xs uppercase">Pendientes</p>
         <p class="mt-2 text-3xl font-bold text-white">
           {{ stats.pending }}
         </p>
       </div>
 
-      <div class="glass rounded-2xl p-5 border border-cyan-500/20">
+      <div class="glass rounded-2xl p-5 border border-cyan-500/20 transition-all duration-300 ease-in-out">
         <p class="text-slate-400 text-xs uppercase">En progreso</p>
         <p class="mt-2 text-3xl font-bold text-cyan-400">
           {{ stats.in_progress }}
         </p>
       </div>
 
-      <div class="glass rounded-2xl p-5 border border-emerald-500/20">
+      <div class="glass rounded-2xl p-5 border border-emerald-500/20 transition-all duration-300 ease-in-out">
         <p class="text-slate-400 text-xs uppercase">Completados</p>
         <p class="mt-2 text-3xl font-bold text-emerald-400">
           {{ stats.done }}
         </p>
       </div>
 
-      <div class="glass rounded-2xl p-5 border border-white/10">
+      <div class="glass rounded-2xl p-5 border border-white/10 transition-all duration-300 ease-in-out">
         <p class="text-slate-400 text-xs uppercase">Total trabajos</p>
         <p class="mt-2 text-3xl font-bold text-white">
           {{ stats.total }}
         </p>
       </div>
-
-    </section>
+    </div>
 
     <!-- ================= ANALYTICS ================= -->
-    <section class="glass rounded-2xl p-5 border border-white/10">
+    <section class="glass rounded-2xl p-5 border border-white/10 mb-8 transition-all duration-300 ease-in-out">
       <h2 class="text-xl font-heading font-bold text-white mb-4">Analytics</h2>
       <canvas id="jobsChart" width="400" height="200"></canvas>
       {% if current_user.workshop.subscription and current_user.workshop.subscription.plan == 'premium' %}
@@ -134,10 +122,7 @@
 
     <!-- ================= JOBS ================= -->
     <section class="space-y-4">
-
-      <h2 class="text-xl font-heading font-bold text-white">
-        Trabajos recientes
-      </h2>
+      <h2 class="text-xl font-heading font-bold text-white">Trabajos recientes</h2>
 
       {% if jobs|length == 0 %}
         <div class="text-center py-16 glass rounded-2xl border border-dashed border-white/10">
@@ -147,43 +132,29 @@
 
       {% for job in jobs %}
       <a href="/jobs/{{ job.id }}"
-         class="block p-5 rounded-2xl
-                bg-slate-900/50 border border-white/5
-                hover:border-emerald-500/50 hover:bg-white/[0.03]
-                transition">
-
+         class="block p-5 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-emerald-500/50 hover:bg-white/[0.03] transition-all duration-200 ease-in-out">
         <div class="flex justify-between items-center">
-
           <div>
-            <h3 class="font-bold text-white">
-              {{ job.item }}
-            </h3>
-            <p class="text-sm text-slate-400">
-              {{ job.client_name }} · {{ job.created_at.strftime('%d/%m/%Y') }}
-            </p>
+            <h3 class="font-bold text-white">{{ job.item }}</h3>
+            <p class="text-sm text-slate-400">{{ job.client_name }} · {{ job.created_at.strftime('%d/%m/%Y') }}</p>
           </div>
 
           {% if job.status == 'RECEIVED' %}
-            <span class="px-3 py-1 rounded-full text-xs font-bold
-                         bg-slate-800 text-slate-300">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300">
               Recibido
             </span>
           {% elif job.status == 'IN_PROGRESS' %}
-            <span class="px-3 py-1 rounded-full text-xs font-bold
-                         bg-cyan-500/10 text-cyan-400">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400">
               En taller
             </span>
           {% elif job.status == 'DONE' %}
-            <span class="px-3 py-1 rounded-full text-xs font-bold
-                         bg-emerald-500/10 text-emerald-400">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400">
               Listo
             </span>
           {% endif %}
-
         </div>
       </a>
       {% endfor %}
-
     </section>
 
   </main>

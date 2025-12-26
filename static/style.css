@@ -211,3 +211,19 @@ label {
     transform: perspective(1000px) rotateX(1deg) rotateY(-1deg) scale(1.015);
   }
 }
+
+
+
+@media (max-width: 475px) {
+  .campos-register {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #btn-start {
+    font-size: 15px;
+    font-weight: bold;
+    padding: 8px 13px;
+  }
+  
+}

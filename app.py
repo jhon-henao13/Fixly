@@ -564,8 +564,9 @@ def forgot_password():
 def subscribe(plan):
     # IDs de productos en Lemon Squeezy (reemplaza con los reales)
     products = {
-        "basic": "tu_product_id_basic",  # $9/mes
-        "premium": "tu_product_id_premium"  # $19/mes
+        "free": "745837",
+        "basic": "745844",  # $9/mes
+        "premium": "745855"  # $29/mes
     }
     if plan not in products:
         abort(404)
