@@ -8,12 +8,14 @@
 
     <!-- Logo -->
     <div>
-      <div class="flex items-center gap-3 mb-10">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-slate-900 font-bold">
+      <div class="flex items-center gap-3 mb-4">
+        <!-- <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-slate-900 font-bold">
           F
-        </div>
-        <span class="text-xl font-heading font-bold text-white">Fixly</span>
+        </div> -->
+        <span class="text-xl text-center font-heading font-bold text-white">{{ current_user.workshop.name }}</span>
       </div>
+
+      <hr class="pb-4">
 
       <!-- Nav -->
       <nav class="space-y-2 text-sm">
