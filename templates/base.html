@@ -58,20 +58,29 @@
   <div class="max-w-6xl mx-auto backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-black/50 px-6 py-3 flex justify-between items-center transition-all hover:bg-white/10">
 
     <a href="/" class="flex items-center gap-2 group">
-       <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-emerald-500 flex items-center justify-center text-slate-900 font-bold text-lg shadow-[0_0_15px_rgba(16,185,129,0.5)] group-hover:shadow-[0_0_25px_rgba(16,185,129,0.8)] transition duration-300">
-         <img src="{{ url_for('static', filename='img/icon.png') }}" alt="Fixly Logo" class="w-full h-full object-cover rounded-md">
-         
-         
-       </div>
+
+       <div class="w-10 h-10 rounded-lg overflow-hidden shadow-[0_0_20px_rgba(16,185,129,0.45)] group-hover:shadow-[0_0_30px_rgba(16,185,129,0.7)] transition">
+          <img src="{{ url_for('static', filename='img/icon.png') }}" alt="Fixly" class="w-full h-full object-contain p-1 bg-gradient-to-br from-cyan-400 to-emerald-500 rounded-lg">
+        </div>
+
        <span class="text-2xl font-heading font-bold text-white tracking-wide">
          Fix<span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">ly</span>
        </span>
     </a>
 
+    <!-- BOTÓN MENÚ MÓVIL -->
+    <button id="mobileMenuBtn"
+        class="md:hidden text-white text-2xl focus:outline-none hover:text-emerald-400 transition ml-auto">
+      ☰
+    </button>
+    
+
+
     <div class="flex items-center gap-6 font-medium text-sm">
       {% if current_user.is_authenticated %}
-        <a href="/dashboard" class="hidden md:block hover:text-white transition relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-emerald-400 after:transition-all hover:after:w-full">Dashboard</a>
-        <a href="/logout" class="text-slate-400 hover:text-red-400 transition">Salir</a>
+        <a href="/dashboard" class="hidden md:block hover:text-white transition">Dashboard</a>
+        <a href="/logout" class="hidden md:block text-slate-400 hover:text-red-400 transition">Salir</a>
+
       {% else %}
         <a href="/login" class="hidden md:block hover:text-white transition">Ingresa</a>
         <a href="/register"
@@ -87,6 +96,9 @@
 <main class="relative z-10 pt-32 pb-20 max-w-6xl mx-auto px-6">
   {% block content %}{% endblock %}
 </main>
+
+
+
 
 </body>
 </html>

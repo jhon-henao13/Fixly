@@ -1,17 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="flex gap-6 flex-col md:flex-row">
+<div class="flex gap-2 flex-col md:flex-row">
 
   <!-- ================= SIDEBAR ================= -->
-  <aside class="hidden md:flex w-64 flex-col justify-between glass border border-white/10 rounded-3xl p-6 transition-all duration-300 ease-in-out">
+<!-- ================= SIDEBAR ================= -->
+  <aside id="sidebar"
+    class="md:relative transform -translate-x-full transition-all duration-300 w-64 h-full z-50 bg-[#020617]/95 backdrop-blur-xl border-r border-white/10 md:translate-x-0">
 
     <!-- Logo -->
     <div>
       <div class="flex items-center gap-3 mb-4">
-        <!-- <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-slate-900 font-bold">
-          F
-        </div> -->
         <span class="text-xl text-center font-heading font-bold text-white">{{ current_user.workshop.name }}</span>
       </div>
 
@@ -39,6 +38,18 @@
            class="flex items-center gap-3 px-4 py-2 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition">
           ⚙️ Configuración
         </a>
+
+        <!-- Nueva sección para Dashboard y Salir -->
+        {% if current_user.is_authenticated %}
+          <a href="/dashboard"
+             class="flex items-center gap-3 px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 font-semibold transition-all duration-200 ease-in-out hover:text-white">
+            📊 Dashboard
+          </a>
+          <a href="/logout"
+             class="flex items-center gap-3 px-4 py-2 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition">
+            🚪 Salir
+          </a>
+        {% endif %}
       </nav>
     </div>
 
@@ -49,6 +60,12 @@
       <a href="/forgot_password" class="text-sm text-emerald-400 hover:text-emerald-600">Actualizar contraseña</a>
     </div>
   </aside>
+
+
+  <!-- FONDO OSCURECIDO PARA MÓVIL -->
+    <div id="sidebarOverlay"
+     class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"></div>
+
 
   <!-- ================= MAIN ================= -->
   <main class="flex-1 space-y-8 px-4 md:px-6">
@@ -75,9 +92,9 @@
       <h2 class="text-xl font-heading font-bold text-white mb-4">Tu Plan</h2>
       <p class="text-slate-400">Plan actual: <strong class="text-white">{{ current_user.workshop.subscription.plan if current_user.workshop.subscription else 'Free' }}</strong></p>
       {% if not current_user.workshop.subscription or current_user.workshop.subscription.plan == 'free' %}
-        <div class="mt-4 space-x-2">
+        <div id="planes" class="mt-4 space-x-2 mt-2 flex gap-2">
           <a href="/subscribe/basic" class="px-4 py-2 bg-blue-800 text-white rounded-lg font-bold transition-all duration-200 ease-in-out hover:bg-blue-700">Suscribir Basic ($9/mes)</a>
-          <a href="/subscribe/premium" class="px-4 py-2 bg-green-700 text-white rounded-lg font-bold transition-all duration-200 ease-in-out hover:bg-green-600">Suscribir Premium ($19/mes)</a>
+          <a id="planes-b" href="/subscribe/premium" class="px-4 py-2 bg-green-700 text-white rounded-lg font-bold transition-all duration-200 ease-in-out hover:bg-green-600">Suscribir Premium ($19/mes)</a>
         </div>
       {% endif %}
     </section>
@@ -185,5 +202,62 @@
     }
   });
 </script>
+
+<script>
+  const btn = document.getElementById("mobileMenuBtn");
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+
+  // Toggle menú
+  btn.addEventListener("click", () => {
+    if (sidebar.classList.contains("-translate-x-full")) {
+      sidebar.classList.remove("-translate-x-full");
+      overlay.classList.remove("hidden");
+    } else {
+      sidebar.classList.add("-translate-x-full");
+      overlay.classList.add("hidden");
+    }
+  });
+
+  // Cerrar al tocar afuera
+  overlay.addEventListener("click", () => {
+    sidebar.classList.add("-translate-x-full");
+    overlay.classList.add("hidden");
+  });
+</script>
+
+
+<style>
+
+  #sidebar {
+    padding: 20px;
+    border-radius: 30px;
+    height: 80vh;
+  }
+
+  @media (max-width: 768px) {
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      margin: 88px 18px;
+      padding: 20px;
+      border-radius: 30px;
+      height: 80vh;
+    }  
+  }
+  
+  @media (max-width: 508px) {
+  #planes {
+    flex-direction: column;  
+  }
+
+  #planes-b {
+    margin: 0;
+  }
+
+  }
+</style>
+
 
 {% endblock %}
