@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-3xl font-semibold text-center text-gray-900 mb-6">Tokens Pendientes de Suscripción</h1>
+    
+    <!-- Mensaje si no hay tokens -->
+    {% if not pending %}
+      <p class="text-center text-gray-500">No hay tokens pendientes de suscripción en este momento.</p>
+    {% else %}
+      <!-- Tabla de Tokens Pendientes -->
+      <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+        <thead>
+          <tr>
+            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 bg-gray-100">ID</th>
+            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 bg-gray-100">Taller</th>
+            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 bg-gray-100">Plan</th>
+            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 bg-gray-100">Fecha Creación</th>
+            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 bg-gray-100">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for token in pending %}
+            <tr class="hover:bg-gray-50 border-b border-gray-200">
+              <td class="py-3 px-4 text-sm text-gray-800">{{ token.id }}</td>
+              <td class="py-3 px-4 text-sm text-gray-800">{{ token.workshop.name }}</td>
+              <td class="py-3 px-4 text-sm text-gray-800 capitalize">{{ token.plan }}</td>
+              <td class="py-3 px-4 text-sm text-gray-800">{{ token.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+              <td class="py-3 px-4 text-sm text-gray-800">
+                {% if token.is_valid() %}
+                  <span class="text-green-500">Válido</span>
+                {% else %}
+                  <span class="text-red-500">Expirado o Usado</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+{% endblock %}

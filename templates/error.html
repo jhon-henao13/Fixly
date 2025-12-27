@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto text-center">
+  
+  <!-- Icono de error -->
+  <div class="mb-8 inline-block">
+    <div class="w-24 h-24 mx-auto bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-2xl shadow-red-500/50">
+      <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Título -->
+  <h1 class="text-4xl font-heading font-bold text-white mb-4">
+    Acceso Denegado
+  </h1>
+  
+  <!-- Mensaje de error -->
+  <p class="text-xl text-slate-300 mb-8">
+    {{ message }}
+  </p>
+
+  <!-- Tarjeta de información -->
+  <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 mb-8">
+    <h2 class="text-2xl font-semibold text-white mb-4">¿Qué sucedió?</h2>
+    
+    <div class="space-y-4 text-left text-slate-300">
+      <p>
+        El enlace que intentaste usar no es válido. Esto puede ocurrir por:
+      </p>
+      <ul class="list-disc list-inside space-y-2 ml-4">
+        <li>El enlace ya fue usado anteriormente</li>
+        <li>El enlace expiró (válido por 1 hora)</li>
+        <li>El enlace no te pertenece</li>
+        <li>Intentaste acceder directamente a una URL protegida</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="flex gap-4 justify-center">
+    <a href="/dashboard" 
+       class="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold transition border border-white/20">
+      ← Volver al Dashboard
+    </a>
+    
+    <a href="/pricing" 
+       class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold transition shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+      Ver Planes de Suscripción
+    </a>
+  </div>
+
+  <!-- Soporte -->
+  <div class="mt-12 pt-8 border-t border-white/10">
+    <p class="text-slate-400 text-sm">
+      ¿Crees que esto es un error? 
+      <a href="mailto:estiguar.dev.emails@gmail.com" class="text-emerald-400 hover:text-emerald-300 underline">
+        Contáctanos aquí
+      </a>
+    </p>
+  </div>
+
+</div>
+{% endblock %}

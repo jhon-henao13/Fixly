@@ -1,5 +1,5 @@
 import os, secrets, hmac, hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, abort, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
@@ -46,6 +46,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
 # ================= MODELS =================
 class Workshop(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -117,6 +118,22 @@ class Subscription(db.Model):
     active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
+
+class PendingSubscription(db.Model):
+    """
+    Tokens temporales para verificar pagos legítimos
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    workshop_id = db.Column(db.Integer, db.ForeignKey('workshop.id'))
+    plan = db.Column(db.String(50))
+    token = db.Column(db.String(64), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    used = db.Column(db.Boolean, default=False)
+    
+    # Expirar tokens después de 1 hora
+    def is_valid(self):
+        return not self.used and (datetime.utcnow() - self.created_at) < timedelta(hours=1)
 
 
 
@@ -635,30 +652,41 @@ def forgot_password():
 #         return redirect(checkout_url)
 #     return "Error creando checkout", 500
 
-
 @app.route("/subscribe/<plan>")
 @login_required
 def subscribe(plan):
     """
-    Redirige al usuario a Lemon Squeezy con parámetros personalizados
+    Genera un token único y redirige a Lemon Squeezy
     """
-    # URLs de checkout con parámetros de redirección
+    if plan not in ['basic', 'premium']:
+        abort(404)
+    
+    # Crear token de verificación
+    token = secrets.token_urlsafe(32)
+    
+    pending = PendingSubscription(
+        workshop_id=current_user.workshop_id,
+        plan=plan,
+        token=token
+    )
+    db.session.add(pending)
+    db.session.commit()
+    
+    # URL base de checkout
     base_urls = {
         "basic": "https://fixlysaas.lemonsqueezy.com/checkout/buy/d6b49ef6-d2ab-4dc5-9c43-1b74324c6af8",        
         "premium": "https://fixlysaas.lemonsqueezy.com/checkout/buy/b124c9db-17c4-495a-ab4c-76145fc2812e"
     }
     
-    if plan not in base_urls:
-        abort(404)
+    # Construir URL de checkout con custom data
+    checkout_url = (
+        f"{base_urls[plan]}"
+        f"?checkout[email]={current_user.email}"
+        f"&checkout[custom][workshop_id]={current_user.workshop_id}"
+        f"&checkout[custom][token]={token}"
+    )
     
-    # URL de éxito que incluye el plan y email del usuario
-    success_url = url_for('payment_success', 
-                         plan=plan,
-                         email=current_user.email,
-                         _external=True)
-    
-    # Construir URL completa con parámetros
-    checkout_url = f"{base_urls[plan]}?checkout[email]={current_user.email}&checkout[custom][workshop_id]={current_user.workshop_id}"
+    print(f"🔐 Token generado: {token} para workshop {current_user.workshop_id}")
     
     return redirect(checkout_url)
 
@@ -667,19 +695,43 @@ def subscribe(plan):
 @login_required
 def payment_success():
     """
-    Página a la que llega el usuario después de pagar.
-    Configurar esta URL en Lemon Squeezy como "Success URL"
+    Verifica el token antes de activar la suscripción
     """
-    plan = request.args.get('plan', 'basic')
+    token = request.args.get('token')
     
-    # Actualizar suscripción automáticamente
+    if not token:
+        return render_template("error.html", 
+                             message="Acceso denegado: Token inválido"), 403
+    
+    # Buscar token en la base de datos
+    pending = PendingSubscription.query.filter_by(token=token).first()
+    
+    if not pending:
+        return render_template("error.html", 
+                             message="Token no encontrado"), 404
+    
+    # Verificar que el token no haya expirado ni sido usado
+    if not pending.is_valid():
+        return render_template("error.html", 
+                             message="Token expirado o ya usado"), 403
+    
+    # Verificar que el token pertenece al usuario actual
+    if pending.workshop_id != current_user.workshop_id:
+        return render_template("error.html", 
+                             message="Token no válido para este usuario"), 403
+    
+    # TODO: Marcar como usado SOLO cuando el webhook confirme el pago
+    # Por ahora lo marcamos aquí para evitar doble uso
+    plan = pending.plan
+    
+    # Activar suscripción
     workshop = current_user.workshop
     
     if not workshop.subscription:
         sub = Subscription(
             workshop_id=workshop.id,
             plan=plan,
-            lemon_customer_id="pending_verification",  # Se actualizará con webhook
+            lemon_customer_id="pending_webhook",
             active=True
         )
         db.session.add(sub)
@@ -687,7 +739,11 @@ def payment_success():
         workshop.subscription.plan = plan
         workshop.subscription.active = True
     
+    # Marcar token como usado
+    pending.used = True
     db.session.commit()
+    
+    print(f"✅ Suscripción {plan} activada para workshop {workshop.id}")
     
     return render_template("payment_success.html", plan=plan)
 
@@ -696,18 +752,14 @@ def payment_success():
 def lemon_webhook():
     """
     Webhook para recibir eventos de Lemon Squeezy.
-    Esto verifica y actualiza las suscripciones automáticamente.
-    
-    IMPORTANTE: Configura esta URL en Lemon Squeezy:
-    https://fixly.pythonanywhere.com/lemon/webhook
+    Actualiza el customer_id cuando el pago es confirmado.
     """
     
-    # Verificar firma del webhook (seguridad)
+    # Verificar firma del webhook (seguridad crítica)
     signature = request.headers.get('X-Signature')
     webhook_secret = os.getenv('LEMON_WEBHOOK_SECRET', '')
     
     if webhook_secret:
-        # Calcular firma esperada
         raw_body = request.get_data()
         expected_signature = hmac.new(
             webhook_secret.encode('utf-8'),
@@ -727,54 +779,76 @@ def lemon_webhook():
     
     # Extraer datos del pedido
     attributes = data.get('data', {}).get('attributes', {})
-    custom_data = attributes.get('custom_data', {})
-    
-    workshop_id = custom_data.get('workshop_id')
     order_id = attributes.get('order_number')
     customer_email = attributes.get('user_email')
     
     if event_name == 'order_created':
-        # Buscar workshop por email del cliente
+        # Buscar workshop por email
         workshop = Workshop.query.filter_by(email=customer_email).first()
         
-        if workshop:
-            # Determinar plan basado en el producto
-            variant_id = data.get('data', {}).get('relationships', {}).get('variant', {}).get('data', {}).get('id')
-            
-            # Mapeo de variant IDs a planes (ajusta según tus IDs reales)
-            plan_map = {
-                "745844": "basic",
-                "745855": "premium"
-            }
-            plan = plan_map.get(variant_id, "basic")
-            
-            # Actualizar o crear suscripción
-            if workshop.subscription:
-                workshop.subscription.plan = plan
-                workshop.subscription.active = True
-                workshop.subscription.lemon_customer_id = order_id
-            else:
-                sub = Subscription(
-                    workshop_id=workshop.id,
-                    plan=plan,
-                    lemon_customer_id=order_id,
-                    active=True
-                )
-                db.session.add(sub)
-            
+        if workshop and workshop.subscription:
+            # Actualizar el customer_id con el Order ID real
+            workshop.subscription.lemon_customer_id = str(order_id)
             db.session.commit()
-            print(f"✅ Suscripción activada: {plan} para {customer_email}")
+            print(f"✅ Order ID {order_id} vinculado a workshop {workshop.id}")
+        else:
+            print(f"⚠️ No se encontró workshop con email {customer_email}")
     
     elif event_name == 'subscription_cancelled':
         # Desactivar suscripción
-        order_id = attributes.get('order_number')
-        sub = Subscription.query.filter_by(lemon_customer_id=order_id).first()
-        if sub:
-            sub.active = False
+        subscription = Subscription.query.filter_by(lemon_customer_id=str(order_id)).first()
+        if subscription:
+            subscription.active = False
             db.session.commit()
-            print(f"❌ Suscripción cancelada: {order_id}")
+            print(f"❌ Suscripción {order_id} cancelada")
     
     return jsonify({"status": "success"}), 200
+
+
+
+
+# ================= RUTA DE ADMIN PARA DEBUGGING =================
+
+@app.route("/admin/pending-subscriptions")
+@login_required
+def admin_pending_subscriptions():
+    """
+    Solo para admins: ver tokens pendientes
+    """
+    if current_user.role != "admin":
+        abort(403)
+    
+    pending = PendingSubscription.query.order_by(PendingSubscription.created_at.desc()).limit(20).all()
+    return render_template("admin_pending.html", pending=pending)
+
+
+# ================= LIMPIAR TOKENS EXPIRADOS =================
+
+@app.route("/cron/cleanup-tokens")
+def cleanup_expired_tokens():
+    """
+    Ejecutar diariamente para limpiar tokens expirados.
+    Configura un cron job en PythonAnywhere para llamar esta URL.
+    """
+    # Verificar que solo se ejecute desde el servidor (opcional)
+    secret_key = request.args.get('secret')
+    if secret_key != os.getenv('CRON_SECRET'):
+        abort(403)
+    
+    # Eliminar tokens más viejos de 24 horas
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    deleted = PendingSubscription.query.filter(
+        PendingSubscription.created_at < cutoff
+    ).delete()
+    
+    db.session.commit()
+    
+    return jsonify({
+        "status": "success",
+        "deleted_tokens": deleted
+    })
+
+
 
 
 @app.route("/pricing")
@@ -783,7 +857,6 @@ def pricing():
     Página de precios con botones de suscripción
     """
     return render_template("pricing.html")
-
 
 
 @app.route("/api/jobs", methods=["GET"])
