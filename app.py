@@ -1,4 +1,4 @@
-import os, secrets
+import os, secrets, hmac, hashlib
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, abort, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 import smtplib
 from email.message import EmailMessage
 
-from flask_mail import Mail, Mail, Message
+from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 
 from flask_migrate import Migrate
@@ -25,15 +25,14 @@ app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-
 # Configuración de Flask-Mail
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # O el servidor que uses
-app.config['MAIL_PORT'] = 465  # Puerto para SSL
-app.config['MAIL_USE_TLS'] = False  # Usa TLS (opcional, dependiendo del servidor)
-app.config['MAIL_USE_SSL'] = True  # Usa SSL
-app.config['MAIL_USERNAME'] = os.getenv("MAIL_USER")  # Tu dirección de correo
-app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")  # Tu contraseña
-app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USER")  # Tu correo como remitente
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = os.getenv("MAIL_USER")
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USER")
 
 mail = Mail(app)
 
@@ -41,15 +40,12 @@ mail = Mail(app)
 twilio_client = TwilioClient(os.getenv("TWILIO_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
     
 db = SQLAlchemy(app)
-
 migrate = Migrate(app, db)
 
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
-
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-
 # ================= MODELS =================
 class Workshop(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -587,57 +583,207 @@ def forgot_password():
     return render_template("forgot_password.html")
 
 
-@app.route("/subscribe/<plan>", methods=["GET"])
+# @app.route("/subscribe/<plan>", methods=["GET"])
+# @login_required
+# def subscribe(plan):
+#     # IDs de productos en Lemon Squeezy (reemplaza con los reales)
+#     products = {
+#         "free": "745837",
+#         "basic": "745844",  # $9/mes
+#         "premium": "745855"  # $29/mes
+#     }
+#     if plan not in products:
+#         abort(404)
+
+#     # Crear checkout en Lemon Squeezy
+#     data = {
+#         "data": {
+#             "type": "checkouts",
+#             "attributes": {
+#                 "checkout_data": {
+#                     "email": current_user.email,
+#                     "name": current_user.workshop.name
+#                 },
+#                 "product_options": {
+#                     "redirect_url": url_for('dashboard', _external=True)
+#                 }
+#             },
+#             "relationships": {
+#                 "store": {
+#                     "data": {
+#                         "type": "stores",
+#                         "id": os.getenv("LEMON_STORE_ID")
+#                     }
+#                 },
+#                 "variant": {
+#                     "data": {
+#                         "type": "variants",
+#                         "id": products[plan]
+#                     }
+#                 }
+#             }
+#         }
+#     }
+#     headers = {
+#         "Authorization": f"Bearer {os.getenv('LEMON_API_KEY')}",
+#         "Content-Type": "application/vnd.api+json",
+#         "Accept": "application/vnd.api+json"
+#     }
+#     response = requests.post("https://api.lemonsqueezy.com/v1/checkouts", json=data, headers=headers)
+#     if response.status_code == 201:
+#         checkout_url = response.json()["data"]["attributes"]["url"]
+#         return redirect(checkout_url)
+#     return "Error creando checkout", 500
+
+
+@app.route("/subscribe/<plan>")
 @login_required
 def subscribe(plan):
-    # IDs de productos en Lemon Squeezy (reemplaza con los reales)
-    products = {
-        "free": "745837",
-        "basic": "745844",  # $9/mes
-        "premium": "745855"  # $29/mes
+    """
+    Redirige al usuario a Lemon Squeezy con parámetros personalizados
+    """
+    # URLs de checkout con parámetros de redirección
+    base_urls = {
+        "basic": "https://fixlysaas.lemonsqueezy.com/checkout/buy/d6b49ef6-d2ab-4dc5-9c43-1b74324c6af8",        
+        "premium": "https://fixlysaas.lemonsqueezy.com/checkout/buy/b124c9db-17c4-495a-ab4c-76145fc2812e"
     }
-    if plan not in products:
+    
+    if plan not in base_urls:
         abort(404)
+    
+    # URL de éxito que incluye el plan y email del usuario
+    success_url = url_for('payment_success', 
+                         plan=plan,
+                         email=current_user.email,
+                         _external=True)
+    
+    # Construir URL completa con parámetros
+    checkout_url = f"{base_urls[plan]}?checkout[email]={current_user.email}&checkout[custom][workshop_id]={current_user.workshop_id}"
+    
+    return redirect(checkout_url)
 
-    # Crear checkout en Lemon Squeezy
-    data = {
-        "data": {
-            "type": "checkouts",
-            "attributes": {
-                "checkout_data": {
-                    "email": current_user.email,
-                    "name": current_user.workshop.name
-                },
-                "product_options": {
-                    "redirect_url": url_for('dashboard', _external=True)
-                }
-            },
-            "relationships": {
-                "store": {
-                    "data": {
-                        "type": "stores",
-                        "id": os.getenv("LEMON_STORE_ID")
-                    }
-                },
-                "variant": {
-                    "data": {
-                        "type": "variants",
-                        "id": products[plan]
-                    }
-                }
+
+@app.route("/payment/success")
+@login_required
+def payment_success():
+    """
+    Página a la que llega el usuario después de pagar.
+    Configurar esta URL en Lemon Squeezy como "Success URL"
+    """
+    plan = request.args.get('plan', 'basic')
+    
+    # Actualizar suscripción automáticamente
+    workshop = current_user.workshop
+    
+    if not workshop.subscription:
+        sub = Subscription(
+            workshop_id=workshop.id,
+            plan=plan,
+            lemon_customer_id="pending_verification",  # Se actualizará con webhook
+            active=True
+        )
+        db.session.add(sub)
+    else:
+        workshop.subscription.plan = plan
+        workshop.subscription.active = True
+    
+    db.session.commit()
+    
+    return render_template("payment_success.html", plan=plan)
+
+
+@app.route("/lemon/webhook", methods=["POST"])
+def lemon_webhook():
+    """
+    Webhook para recibir eventos de Lemon Squeezy.
+    Esto verifica y actualiza las suscripciones automáticamente.
+    
+    IMPORTANTE: Configura esta URL en Lemon Squeezy:
+    https://fixly.pythonanywhere.com/lemon/webhook
+    """
+    
+    # Verificar firma del webhook (seguridad)
+    signature = request.headers.get('X-Signature')
+    webhook_secret = os.getenv('LEMON_WEBHOOK_SECRET', '')
+    
+    if webhook_secret:
+        # Calcular firma esperada
+        raw_body = request.get_data()
+        expected_signature = hmac.new(
+            webhook_secret.encode('utf-8'),
+            raw_body,
+            hashlib.sha256
+        ).hexdigest()
+        
+        if signature != expected_signature:
+            print("⚠️ Firma de webhook inválida")
+            return jsonify({"error": "Invalid signature"}), 401
+    
+    # Procesar evento
+    data = request.json
+    event_name = data.get('meta', {}).get('event_name')
+    
+    print(f"📩 Webhook recibido: {event_name}")
+    
+    # Extraer datos del pedido
+    attributes = data.get('data', {}).get('attributes', {})
+    custom_data = attributes.get('custom_data', {})
+    
+    workshop_id = custom_data.get('workshop_id')
+    order_id = attributes.get('order_number')
+    customer_email = attributes.get('user_email')
+    
+    if event_name == 'order_created':
+        # Buscar workshop por email del cliente
+        workshop = Workshop.query.filter_by(email=customer_email).first()
+        
+        if workshop:
+            # Determinar plan basado en el producto
+            variant_id = data.get('data', {}).get('relationships', {}).get('variant', {}).get('data', {}).get('id')
+            
+            # Mapeo de variant IDs a planes (ajusta según tus IDs reales)
+            plan_map = {
+                "745844": "basic",
+                "745855": "premium"
             }
-        }
-    }
-    headers = {
-        "Authorization": f"Bearer {os.getenv('LEMON_API_KEY')}",
-        "Content-Type": "application/vnd.api+json",
-        "Accept": "application/vnd.api+json"
-    }
-    response = requests.post("https://api.lemonsqueezy.com/v1/checkouts", json=data, headers=headers)
-    if response.status_code == 201:
-        checkout_url = response.json()["data"]["attributes"]["url"]
-        return redirect(checkout_url)
-    return "Error creando checkout", 500
+            plan = plan_map.get(variant_id, "basic")
+            
+            # Actualizar o crear suscripción
+            if workshop.subscription:
+                workshop.subscription.plan = plan
+                workshop.subscription.active = True
+                workshop.subscription.lemon_customer_id = order_id
+            else:
+                sub = Subscription(
+                    workshop_id=workshop.id,
+                    plan=plan,
+                    lemon_customer_id=order_id,
+                    active=True
+                )
+                db.session.add(sub)
+            
+            db.session.commit()
+            print(f"✅ Suscripción activada: {plan} para {customer_email}")
+    
+    elif event_name == 'subscription_cancelled':
+        # Desactivar suscripción
+        order_id = attributes.get('order_number')
+        sub = Subscription.query.filter_by(lemon_customer_id=order_id).first()
+        if sub:
+            sub.active = False
+            db.session.commit()
+            print(f"❌ Suscripción cancelada: {order_id}")
+    
+    return jsonify({"status": "success"}), 200
+
+
+@app.route("/pricing")
+def pricing():
+    """
+    Página de precios con botones de suscripción
+    """
+    return render_template("pricing.html")
+
 
 
 @app.route("/api/jobs", methods=["GET"])

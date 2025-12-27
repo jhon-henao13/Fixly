@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto text-center">
+  
+  <!-- Icono de éxito animado -->
+  <div class="mb-8 inline-block">
+    <div class="w-24 h-24 mx-auto bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-2xl shadow-emerald-500/50 animate-pulse-slow">
+      <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Título -->
+  <h1 class="text-4xl font-heading font-bold text-white mb-4">
+    ¡Pago Completado! 🎉
+  </h1>
+  
+  <!-- Descripción -->
+  <p class="text-xl text-slate-300 mb-8">
+    Tu suscripción al plan <span class="text-emerald-400 font-semibold">{{ plan|capitalize }}</span> ha sido activada correctamente.
+  </p>
+
+  <!-- Tarjeta de confirmación -->
+  <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 mb-8">
+    <h2 class="text-2xl font-semibold text-white mb-4">¿Qué sigue?</h2>
+    
+    <div class="space-y-4 text-left">
+      <div class="flex items-start gap-4">
+        <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+          <span class="text-emerald-400 font-bold">1</span>
+        </div>
+        <div>
+          <h3 class="text-white font-semibold mb-1">Tu plan está activo</h3>
+          <p class="text-slate-400 text-sm">Ya puedes usar todas las funciones del plan {{ plan|capitalize }}.</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+          <span class="text-emerald-400 font-bold">2</span>
+        </div>
+        <div>
+          <h3 class="text-white font-semibold mb-1">Revisa tu email</h3>
+          <p class="text-slate-400 text-sm">Recibirás un recibo de pago de Lemon Squeezy.</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-4">
+        <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+          <span class="text-emerald-400 font-bold">3</span>
+        </div>
+        <div>
+          <h3 class="text-white font-semibold mb-1">Comienza a usar Fixly</h3>
+          <p class="text-slate-400 text-sm">Gestiona tus trabajos, clientes y presupuestos sin límites.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Beneficios del plan -->
+  {% if plan == 'basic' %}
+  <div class="bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-xl p-6 mb-8">
+    <h3 class="text-xl font-semibold text-white mb-3">Beneficios del Plan Basic</h3>
+    <ul class="text-left text-slate-300 space-y-2">
+      <li class="flex items-center gap-2">
+        <span class="text-emerald-400">✓</span> Hasta 3 usuarios
+      </li>
+      <li class="flex items-center gap-2">
+        <span class="text-emerald-400">✓</span> Jobs ilimitados
+      </li>
+      <li class="flex items-center gap-2">
+        <span class="text-emerald-400">✓</span> Notificaciones por email a clientes
+      </li>
+      <li class="flex items-center gap-2">
+        <span class="text-emerald-400">✓</span> Generación de reportes PDF
+      </li>
+    </ul>
+  </div>
+  {% elif plan == 'premium' %}
+  <div class="bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-xl p-6 mb-8">
+    <h3 class="text-xl font-semibold text-white mb-3">Beneficios del Plan Premium</h3>
+    <ul class="text-left text-slate-300 space-y-2">
+      <li class="flex items-center gap-2">
+        <span class="text-emerald-400">✓</span> Usuarios ilimitados
+      </li>
+      <li class="flex items-center gap-2">
+        <span class="text-emerald-400">✓</span> Jobs ilimitados
+      </li>
+      <li class="flex items-center gap-2">
+        <span class="text-emerald-400">✓</span> Notificaciones por email + SMS
+      </li>
+      <li class="flex items-center gap-2">
+        <span class="text-emerald-400">✓</span> API REST completa
+      </li>
+      <li class="flex items-center gap-2">
+        <span class="text-emerald-400">✓</span> Reportes avanzados y analytics
+      </li>
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- Botón de acción -->
+  <a href="/dashboard" 
+     class="inline-block px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold transition shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:shadow-[0_0_40px_rgba(16,185,129,0.6)] border border-emerald-400/20">
+    Ir al Dashboard →
+  </a>
+
+  <!-- Soporte -->
+  <div class="mt-12 pt-8 border-t border-white/10">
+    <p class="text-slate-400 text-sm">
+      ¿Necesitas ayuda? 
+      <a href="mailto:estiguar.dev.emails@gmail.com" class="text-emerald-400 hover:text-emerald-300 underline">
+        Contáctanos aquí
+      </a>
+    </p>
+  </div>
+
+</div>
+
+<style>
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse-slow 2s ease-in-out infinite;
+  }
+</style>
+{% endblock %}
