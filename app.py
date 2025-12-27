@@ -1,6 +1,6 @@
 import os, secrets
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, abort, jsonify
+from flask import Flask, render_template, request, redirect, url_for, abort, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -120,6 +120,34 @@ class Subscription(db.Model):
     lemon_customer_id = db.Column(db.String(100))
     active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+
+
+@app.route('/sitemap.xml')
+def sitemap():
+    pages = [
+        {'loc': 'https://fixly.pythonanywhere.com/', 'lastmod': '2025-12-25'},
+        {'loc': 'https://fixly.pythonanywhere.com/register', 'lastmod': '2025-12-25'},
+        {'loc': 'https://fixly.pythonanywhere.com/login', 'lastmod': '2025-12-25'},
+        {'loc': 'https://fixly.pythonanywhere.com/contacto', 'lastmod': '2025-12-25'},
+    ]
+
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">"""
+
+    for page in pages:
+        xml += f"""
+        <url>
+            <loc>{page['loc']}</loc>
+            <lastmod>{page['lastmod']}</lastmod>
+        </url>"""
+
+    xml += "</urlset>"
+
+    return Response(xml, mimetype='application/xml')
+
+
 
 # ================= AUTH =================
 @login_manager.user_loader

@@ -5,6 +5,25 @@
   <title>Fixly | Gestión Inteligente de Talleres</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <meta name="description" content="Fixly es la plataforma para talleres mecánicos y servicios técnicos. Organiza reparaciones, presupuestos y mejora la comunicación con tus clientes. ¡Regístrate gratis ahora!">
+  <meta name="robots" content="index, follow"> <!-- Para permitir que los motores de búsqueda indexen tu página -->
+  <meta name="keywords" content="gestión de talleres, reparaciones, presupuestos, servicio técnico, app para talleres, historial de reparaciones, software para talleres, comunicación con clientes, Fixly, SaaS para talleres, gestión mecánica, taller mecánico online, administración de talleres, software de gestión, plataforma para talleres, herramientas para talleres, gestión de vehículos, seguimiento de reparaciones">
+
+  <!-- Open Graph Meta Tags para compartir en redes sociales -->
+  <meta property="og:title" content="Fixly | Gestión Inteligente de Talleres">
+  <meta property="og:description" content="La plataforma para gestionar talleres mecánicos y servicios técnicos de forma eficiente. ¡Prueba gratis hoy!">
+  <meta property="og:image" content="{{ url_for('static', filename='img/icon.png') }}">
+  <meta property="og:url" content="https://fixly.pythonanywhere.com">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Fixly | Gestión Inteligente de Talleres">
+  <meta name="twitter:description" content="Gestiona tu taller con facilidad. Registra vehículos, genera presupuestos, notifica a clientes y más.">
+  <meta name="twitter:image" content="{{ url_for('static', filename='img/icon.png') }}">
+
+
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
@@ -45,6 +64,12 @@
 
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-20P99Y48K6"></script>
+
+
 </head>
 
 <body class="bg-[#020617] text-slate-300 min-h-screen relative selection:bg-emerald-500/30 selection:text-emerald-200 overflow-x-hidden">
@@ -98,6 +123,13 @@
 </main>
 
 
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-20P99Y48K6');
+</script>
 
 
 </body>
