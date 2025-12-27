@@ -652,6 +652,7 @@ def forgot_password():
 #         return redirect(checkout_url)
 #     return "Error creando checkout", 500
 
+
 @app.route("/subscribe/<plan>")
 @login_required
 def subscribe(plan):
@@ -678,7 +679,7 @@ def subscribe(plan):
         "premium": "https://fixlysaas.lemonsqueezy.com/checkout/buy/b124c9db-17c4-495a-ab4c-76145fc2812e"
     }
     
-    # Construir URL de checkout con custom data
+    # Construir URL de checkout con custom data (para webhook)
     checkout_url = (
         f"{base_urls[plan]}"
         f"?checkout[email]={current_user.email}"
@@ -695,71 +696,51 @@ def subscribe(plan):
 @login_required
 def payment_success():
     """
-    Verifica el token antes de activar la suscripción
+    Página de espera mientras el webhook procesa el pago
     """
-    token = request.args.get('token')
-    
-    if not token:
-        return render_template("error.html", 
-                             message="Acceso denegado: Token inválido"), 403
-    
-    # Buscar token en la base de datos
-    pending = PendingSubscription.query.filter_by(token=token).first()
-    
-    if not pending:
-        return render_template("error.html", 
-                             message="Token no encontrado"), 404
-    
-    # Verificar que el token no haya expirado ni sido usado
-    if not pending.is_valid():
-        return render_template("error.html", 
-                             message="Token expirado o ya usado"), 403
-    
-    # Verificar que el token pertenece al usuario actual
-    if pending.workshop_id != current_user.workshop_id:
-        return render_template("error.html", 
-                             message="Token no válido para este usuario"), 403
-    
-    # TODO: Marcar como usado SOLO cuando el webhook confirme el pago
-    # Por ahora lo marcamos aquí para evitar doble uso
-    plan = pending.plan
-    
-    # Activar suscripción
+    return render_template("payment_processing.html")
+
+
+
+@app.route("/payment/check-status")
+@login_required
+def check_payment_status():
+    """
+    AJAX endpoint para verificar si el pago ya fue procesado por el webhook
+    """
     workshop = current_user.workshop
     
-    if not workshop.subscription:
-        sub = Subscription(
-            workshop_id=workshop.id,
-            plan=plan,
-            lemon_customer_id="pending_webhook",
-            active=True
-        )
-        db.session.add(sub)
-    else:
-        workshop.subscription.plan = plan
-        workshop.subscription.active = True
+    if workshop.subscription and workshop.subscription.active:
+        plan = workshop.subscription.plan
+        # Verificar si el plan cambió recientemente (últimos 5 minutos)
+        if workshop.subscription.created_at:
+            time_diff = datetime.utcnow() - workshop.subscription.created_at
+            if time_diff.total_seconds() < 300:  # 5 minutos
+                return jsonify({
+                    "status": "completed",
+                    "plan": plan
+                })
     
-    # Marcar token como usado
-    pending.used = True
-    db.session.commit()
-    
-    print(f"✅ Suscripción {plan} activada para workshop {workshop.id}")
-    
-    return render_template("payment_success.html", plan=plan)
+    return jsonify({
+        "status": "pending"
+    })
+
+
+
 
 
 @app.route("/lemon/webhook", methods=["POST"])
 def lemon_webhook():
     """
     Webhook para recibir eventos de Lemon Squeezy.
-    Actualiza el customer_id cuando el pago es confirmado.
+    ESTE ES EL ÚNICO LUGAR QUE ACTIVA SUSCRIPCIONES.
     """
     
-    # Verificar firma del webhook (seguridad crítica)
+    # Verificar firma del webhook (CRÍTICO para seguridad)
     signature = request.headers.get('X-Signature')
     webhook_secret = os.getenv('LEMON_WEBHOOK_SECRET', '')
     
-    if webhook_secret:
+    if webhook_secret and webhook_secret != '123456789':  # No usar default
         raw_body = request.get_data()
         expected_signature = hmac.new(
             webhook_secret.encode('utf-8'),
@@ -772,37 +753,154 @@ def lemon_webhook():
             return jsonify({"error": "Invalid signature"}), 401
     
     # Procesar evento
-    data = request.json
-    event_name = data.get('meta', {}).get('event_name')
-    
-    print(f"📩 Webhook recibido: {event_name}")
-    
-    # Extraer datos del pedido
-    attributes = data.get('data', {}).get('attributes', {})
-    order_id = attributes.get('order_number')
-    customer_email = attributes.get('user_email')
-    
-    if event_name == 'order_created':
-        # Buscar workshop por email
-        workshop = Workshop.query.filter_by(email=customer_email).first()
+    try:
+        data = request.json
+        event_name = data.get('meta', {}).get('event_name')
         
-        if workshop and workshop.subscription:
-            # Actualizar el customer_id con el Order ID real
-            workshop.subscription.lemon_customer_id = str(order_id)
-            db.session.commit()
-            print(f"✅ Order ID {order_id} vinculado a workshop {workshop.id}")
-        else:
-            print(f"⚠️ No se encontró workshop con email {customer_email}")
+        print(f"📩 Webhook recibido: {event_name}")
+        print(f"📦 Datos completos: {data}")
+        
+        # Extraer datos del pedido
+        attributes = data.get('data', {}).get('attributes', {})
+        custom_data = attributes.get('custom_data', {})
+        
+        # Obtener datos personalizados
+        workshop_id = custom_data.get('workshop_id')
+        token = custom_data.get('token')
+        order_id = attributes.get('order_number')
+        customer_email = attributes.get('user_email')
+        
+        # Obtener variant_id para determinar el plan
+        relationships = data.get('data', {}).get('relationships', {})
+        variant_data = relationships.get('variant', {}).get('data', {})
+        variant_id = variant_data.get('id')
+        
+        print(f"💡 Workshop ID: {workshop_id}, Token: {token}, Variant: {variant_id}")
+        
+        if event_name == 'order_created':
+            print(f"💰 Pago recibido - Email: {customer_email}")
+            
+            # Estrategia 1: Usar token si está disponible (más seguro)
+            if token and workshop_id:
+                pending = PendingSubscription.query.filter_by(token=token).first()
+                
+                if pending and pending.is_valid() and pending.workshop_id == int(workshop_id):
+                    workshop = Workshop.query.get(int(workshop_id))
+                    plan = pending.plan
+                    
+                    if workshop:
+                        if not workshop.subscription:
+                            sub = Subscription(
+                                workshop_id=workshop.id,
+                                plan=plan,
+                                lemon_customer_id=str(order_id),
+                                active=True
+                            )
+                            db.session.add(sub)
+                        else:
+                            workshop.subscription.plan = plan
+                            workshop.subscription.active = True
+                            workshop.subscription.lemon_customer_id = str(order_id)
+                        
+                        pending.used = True
+                        db.session.commit()
+                        
+                        print(f"✅ Suscripción {plan} activada con token para workshop {workshop.id}")
+                        
+                        # Enviar email de confirmación
+                        send_subscription_confirmation_email(workshop.email, plan, order_id)
+                        
+                        return jsonify({"status": "success", "method": "token"}), 200
+            
+            # Estrategia 2: Usar email como fallback
+            workshop = Workshop.query.filter_by(email=customer_email).first()
+            
+            if workshop:
+                # Determinar plan basado en variant_id
+                plan_map = {
+                    "1173862": "basic",
+                    "1173882": "premium"
+                }
+                plan = plan_map.get(str(variant_id), "basic")
+                
+                print(f"🔍 Activando por email - Plan: {plan}")
+                
+                if not workshop.subscription:
+                    sub = Subscription(
+                        workshop_id=workshop.id,
+                        plan=plan,
+                        lemon_customer_id=str(order_id),
+                        active=True
+                    )
+                    db.session.add(sub)
+                else:
+                    workshop.subscription.plan = plan
+                    workshop.subscription.active = True
+                    workshop.subscription.lemon_customer_id = str(order_id)
+                
+                db.session.commit()
+                
+                print(f"✅ Suscripción {plan} activada por email para workshop {workshop.id}")
+                
+                # Enviar email de confirmación
+                send_subscription_confirmation_email(customer_email, plan, order_id)
+                
+                return jsonify({"status": "success", "method": "email"}), 200
+            else:
+                print(f"⚠️ No se encontró workshop con email {customer_email}")
+                return jsonify({"error": "Workshop not found"}), 404
+        
+        elif event_name == 'subscription_cancelled':
+            # Desactivar suscripción
+            subscription = Subscription.query.filter_by(lemon_customer_id=str(order_id)).first()
+            if subscription:
+                subscription.active = False
+                db.session.commit()
+                print(f"❌ Suscripción {order_id} cancelada")
     
-    elif event_name == 'subscription_cancelled':
-        # Desactivar suscripción
-        subscription = Subscription.query.filter_by(lemon_customer_id=str(order_id)).first()
-        if subscription:
-            subscription.active = False
-            db.session.commit()
-            print(f"❌ Suscripción {order_id} cancelada")
+    except Exception as e:
+        print(f"❌ Error procesando webhook: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
     
     return jsonify({"status": "success"}), 200
+
+
+
+def send_subscription_confirmation_email(email, plan, order_id):
+    """
+    Envía email de confirmación al activar suscripción
+    """
+    try:
+        msg = Message(
+            f"¡Tu plan {plan.capitalize()} está activo! - Fixly",
+            sender=os.getenv("MAIL_USER"),
+            recipients=[email]
+        )
+        msg.body = f"""¡Hola!
+
+Tu suscripción al plan {plan.capitalize()} ha sido activada correctamente en Fixly.
+
+Detalles:
+- Plan: {plan.capitalize()}
+- Order ID: {order_id}
+- Fecha: {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}
+
+Ya puedes disfrutar de todas las funciones de tu plan.
+
+Ingresa a tu dashboard: https://fixly.pythonanywhere.com/dashboard
+
+Gracias por elegir Fixly.
+
+---
+Equipo Fixly
+"""
+        mail.send(msg)
+        print(f"📧 Email de confirmación enviado a {email}")
+    except Exception as e:
+        print(f"⚠️ Error enviando email de confirmación: {e}")
+
 
 
 
@@ -847,8 +945,6 @@ def cleanup_expired_tokens():
         "status": "success",
         "deleted_tokens": deleted
     })
-
-
 
 
 @app.route("/pricing")
