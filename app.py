@@ -599,72 +599,60 @@ def forgot_password():
 
     return render_template("forgot_password.html")
 
+# LEMON SQUEEZY /SUBSCRIBE
 
-# @app.route("/subscribe/<plan>", methods=["GET"])
+# @app.route("/subscribe/<plan>")
 # @login_required
 # def subscribe(plan):
-#     # IDs de productos en Lemon Squeezy (reemplaza con los reales)
-#     products = {
-#         "free": "745837",
-#         "basic": "745844",  # $9/mes
-#         "premium": "745855"  # $29/mes
-#     }
-#     if plan not in products:
+#     """
+#     Genera un token único y redirige a Lemon Squeezy
+#     """
+#     if plan not in ['basic', 'premium']:
 #         abort(404)
-
-#     # Crear checkout en Lemon Squeezy
-#     data = {
-#         "data": {
-#             "type": "checkouts",
-#             "attributes": {
-#                 "checkout_data": {
-#                     "email": current_user.email,
-#                     "name": current_user.workshop.name
-#                 },
-#                 "product_options": {
-#                     "redirect_url": url_for('dashboard', _external=True)
-#                 }
-#             },
-#             "relationships": {
-#                 "store": {
-#                     "data": {
-#                         "type": "stores",
-#                         "id": os.getenv("LEMON_STORE_ID")
-#                     }
-#                 },
-#                 "variant": {
-#                     "data": {
-#                         "type": "variants",
-#                         "id": products[plan]
-#                     }
-#                 }
-#             }
-#         }
+    
+#     # Crear token de verificación
+#     token = secrets.token_urlsafe(32)
+    
+#     pending = PendingSubscription(
+#         workshop_id=current_user.workshop_id,
+#         plan=plan,
+#         token=token
+#     )
+#     db.session.add(pending)
+#     db.session.commit()
+    
+#     # URL base de checkout
+#     base_urls = {
+#         "basic": "https://fixlysaas.lemonsqueezy.com/checkout/buy/d6b49ef6-d2ab-4dc5-9c43-1b74324c6af8",        
+#         "premium": "https://fixlysaas.lemonsqueezy.com/checkout/buy/b124c9db-17c4-495a-ab4c-76145fc2812e"
 #     }
-#     headers = {
-#         "Authorization": f"Bearer {os.getenv('LEMON_API_KEY')}",
-#         "Content-Type": "application/vnd.api+json",
-#         "Accept": "application/vnd.api+json"
-#     }
-#     response = requests.post("https://api.lemonsqueezy.com/v1/checkouts", json=data, headers=headers)
-#     if response.status_code == 201:
-#         checkout_url = response.json()["data"]["attributes"]["url"]
-#         return redirect(checkout_url)
-#     return "Error creando checkout", 500
+    
+#     # Construir URL de checkout con custom data (para webhook)
+#     checkout_url = (
+#         f"{base_urls[plan]}"
+#         f"?checkout[email]={current_user.email}"
+#         f"&checkout[custom][workshop_id]={current_user.workshop_id}"
+#         f"&checkout[custom][token]={token}"
+#     )
+    
+#     print(f"🔐 Token generado: {token} para workshop {current_user.workshop_id}")
+    
+#     return redirect(checkout_url)
 
 
+# WHOP SUBSCRIBE
 @app.route("/subscribe/<plan>")
 @login_required
 def subscribe(plan):
     """
-    Genera un token único y redirige a Lemon Squeezy
+    Genera un token único y redirige a Whop
     """
     if plan not in ['basic', 'premium']:
         abort(404)
-    
+
     # Crear token de verificación
     token = secrets.token_urlsafe(32)
-    
+
     pending = PendingSubscription(
         workshop_id=current_user.workshop_id,
         plan=plan,
@@ -672,24 +660,21 @@ def subscribe(plan):
     )
     db.session.add(pending)
     db.session.commit()
+
+    # URL base de checkout de Whop
+    whop_checkout_base = "https://whop.com/checkout"
     
-    # URL base de checkout
-    base_urls = {
-        "basic": "https://fixlysaas.lemonsqueezy.com/checkout/buy/d6b49ef6-d2ab-4dc5-9c43-1b74324c6af8",        
-        "premium": "https://fixlysaas.lemonsqueezy.com/checkout/buy/b124c9db-17c4-495a-ab4c-76145fc2812e"
-    }
-    
-    # Construir URL de checkout con custom data (para webhook)
+    # Crea el URL con la información relevante para Whop
     checkout_url = (
-        f"{base_urls[plan]}"
-        f"?checkout[email]={current_user.email}"
-        f"&checkout[custom][workshop_id]={current_user.workshop_id}"
-        f"&checkout[custom][token]={token}"
+        f"{whop_checkout_base}?plan={plan}&email={current_user.email}&workshop_id={current_user.workshop_id}&token={token}"
     )
-    
+
     print(f"🔐 Token generado: {token} para workshop {current_user.workshop_id}")
-    
+
     return redirect(checkout_url)
+
+
+
 
 
 @app.route("/payment/success")
