@@ -676,6 +676,88 @@ def subscribe(plan):
 
 
 
+@app.route("/whop/webhook", methods=["POST"])
+def whop_webhook():
+    """
+    Webhook para recibir eventos de Whop.
+    Este es el lugar que activa o desactiva las suscripciones.
+    """
+    # Verificar firma del webhook (seguridad)
+    signature = request.headers.get('X-Signature')
+    webhook_secret = os.getenv('WHOP_SECRET', '')
+    
+    if webhook_secret and signature != webhook_secret:
+        print("⚠️ Firma de webhook inválida")
+        return jsonify({"error": "Invalid signature"}), 401
+    
+    # Procesar el evento del webhook
+    try:
+        data = request.json
+        event_name = data.get('event_name')
+        print(f"📩 Webhook recibido: {event_name}")
+        
+        # Datos de la suscripción
+        customer_email = data.get('user_email')
+        order_id = data.get('order_id')
+        workshop_id = data.get('workshop_id')
+        plan = data.get('plan')
+
+        # Obtener workshop basado en workshop_id
+        workshop = Workshop.query.get(int(workshop_id))
+        
+        if event_name == 'order_paid':
+            print(f"💰 Pago recibido - Email: {customer_email}")
+            
+            if workshop:
+                # Activa la suscripción del workshop
+                subscription = Subscription(
+                    workshop_id=workshop.id,
+                    plan=plan,
+                    whop_customer_id=str(order_id),
+                    active=True
+                )
+                db.session.add(subscription)
+                db.session.commit()
+                
+                print(f"✅ Suscripción {plan} activada para workshop {workshop.id}")
+                
+                # Enviar email de confirmación
+                send_subscription_confirmation_email(workshop.email, plan, order_id)
+
+                return jsonify({"status": "success"}), 200
+
+        elif event_name == 'order_cancelled':
+            # Desactivar la suscripción
+            subscription = Subscription.query.filter_by(whop_customer_id=str(order_id)).first()
+            if subscription:
+                subscription.active = False
+                db.session.commit()
+                print(f"❌ Suscripción {order_id} cancelada")
+            
+            return jsonify({"status": "success"}), 200
+
+    except Exception as e:
+        print(f"⚠️ Error procesando webhook de Whop: {e}")
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"status": "success"}), 200
+
+
+@app.route("/whop/payment-status", methods=["GET"])
+@login_required
+def whop_payment_status():
+    """
+    Verificar si el pago fue procesado
+    """
+    workshop = current_user.workshop
+    if workshop.subscription and workshop.subscription.active:
+        return jsonify({"status": "completed", "plan": workshop.subscription.plan})
+    
+    return jsonify({"status": "pending"})
+
+
+
+
 
 @app.route("/payment/success")
 @login_required
